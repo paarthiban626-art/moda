@@ -98,14 +98,13 @@
     const max = H - margin - pipeGap/2;
     const gapCenter = Math.floor(Math.random() * (max - min + 1)) + min;
     return {
-      x, gapY: gapCenter, passed:false,
+      x, gapY: gapCenter,
       update() { this.x -= pipeSpeed; },
       offScreen() { return this.x + pipeWidth < 0; },
       draw(ctx) {
         ctx.fillStyle = '#2b6b6b';
         ctx.fillRect(this.x, 0, pipeWidth, this.gapY - pipeGap/2);
-        const bottomY = this.gapY + pipeGap/2;
-        ctx.fillRect(this.x, bottomY, pipeWidth, H - bottomY);
+        ctx.fillRect(this.x, this.gapY + pipeGap/2, pipeWidth, H - (this.gapY + pipeGap/2));
       }
     };
   }
@@ -116,10 +115,7 @@
     const topY2 = p.gapY - pipeGap/2;
     const bottomY1 = p.gapY + pipeGap/2;
     const px1 = p.x, px2 = p.x + pipeWidth;
-    if (bx2 > px1 && bx1 < px2 && by1 < topY2) return true;
-    if (bx2 > px1 && bx1 < px2 && by2 > bottomY1) return true;
-    if (by2 >= H || by1 <= 0) return true;
-    return false;
+    return (bx2 > px1 && bx1 < px2 && (by1 < topY2 || by2 > bottomY1)) || by2 >= H || by1 <= 0;
   }
 
   function clear() { ctx.clearRect(0,0,W,H); }
@@ -139,30 +135,35 @@
     if (!running) return;
     frame++;
     bird.update();
-    if (frame % Math.floor(pipeSpacing/pipeSpeed) === 0) {
-      pipes.push(spawnPipe(W + 20));
-    }
-    for (let i = pipes.length-1; i >= 0; i--) {
-      const p = pipes[i]; p.update();
+    if (frame % Math.floor(pipeSpacing/pipeSpeed) === 0) pipes.push(spawnPipe(W + 20));
+    pipes.forEach((p, i) => {
+      p.update();
       if (checkCollision(bird, p)) endGame();
       if (p.offScreen()) pipes.splice(i,1);
-    }
-    if (bird.y + bird.h/2 >= H) endGame();
+    });
   }
 
   function draw() {
-    clear(); drawBackground();
+    clear();
+    drawBackground();
     pipes.forEach(p => p.draw(ctx));
     drawBird(bird);
   }
 
-  function loop() { update(); draw(); if (running) requestAnimationFrame(loop); }
+  function loop() {
+    if (!running) return;
+    update();
+    draw();
+    requestAnimationFrame(loop);
+  }
 
   function startGame() {
+    if (running) return; // prevent multiple loops
+    running = true;      // mark immediately
     pipes=[]; frame=0; score=0; scoreEl.textContent=score;
     bird.x=80; bird.y=H/2; bird.vy=0;
-    running=true; msgBox.style.display='none';
     for (let i=0; i<3; i++) pipes.push(spawnPipe(W + i*pipeSpacing + 140));
+    msgBox.style.display='none';
     requestAnimationFrame(loop);
   }
 
@@ -176,18 +177,17 @@
   }
 
   function doFlap() {
-    if (!bird) return;
+    unlockSounds();
     if (!running) startGame();
     bird.flap();
   }
 
   function playSound(audio) {
-    if (!soundsUnlocked) return; // block until unlocked
+    if (!soundsUnlocked) return;
     audio.currentTime = 0;
     audio.play();
   }
 
-  // ✅ Unlock sounds on first user interaction
   function unlockSounds() {
     if (soundsUnlocked) return;
     flapSound.play().then(()=>flapSound.pause());
@@ -196,11 +196,11 @@
   }
 
   // Desktop
-  window.addEventListener('keydown', e => { if (e.code==='Space'){ e.preventDefault(); unlockSounds(); doFlap(); }});
-  canvas.addEventListener('mousedown', e => { unlockSounds(); doFlap(); });
+  window.addEventListener('keydown', e => { if (e.code==='Space'){ e.preventDefault(); doFlap(); }});
+  canvas.addEventListener('mousedown', doFlap);
 
-  // ✅ Mobile → tap ANYWHERE
-  window.addEventListener('touchstart', e => { e.preventDefault(); unlockSounds(); doFlap(); }, {passive:false});
+  // Mobile → tap anywhere
+  window.addEventListener('touchstart', e => { e.preventDefault(); doFlap(); }, {passive:false});
 
   startBtn.addEventListener('click', startGame);
 
