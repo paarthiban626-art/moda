@@ -67,7 +67,7 @@ const startBtn = document.getElementById('startBtn');
 
 let bird, pipes = [], running=false, score=0, bestScore=0, soundsUnlocked=false;
 let lastPipeTime = 0;
-const pipeInterval = 1400; // spawn pipes every 1.4s
+const pipeInterval = 1400;
 let lastFrameTime = 0;
 
 function createBird(img){
@@ -91,10 +91,9 @@ function createBird(img){
 }
 
 function spawnPipe(x){
-  const margin = 60;
-  const min = margin + pipeGap/2;
-  const max = H - margin - pipeGap/2;
-  const gapY = Math.floor(Math.random()*(max-min+1))+min;
+  const minGapCenter = pipeGap/2 + 80;
+  const maxGapCenter = H - pipeGap/2 - 80;
+  const gapY = Math.floor(Math.random()*(maxGapCenter-minGapCenter+1))+minGapCenter;
   return {
     x, gapY, passed:false,
     update(dt){ this.x -= pipeSpeed * dt * 60; },
@@ -149,7 +148,8 @@ function draw(){
 function loop(timestamp){
   if(!running) return;
   if(!lastFrameTime) lastFrameTime = timestamp;
-  const dt = (timestamp - lastFrameTime)/16.6667; // normalized to ~60fps
+  let dt = (timestamp - lastFrameTime)/16.6667;
+  dt = Math.min(dt, 2); // cap delta
   lastFrameTime = timestamp;
   update(dt);
   draw();
@@ -157,7 +157,8 @@ function loop(timestamp){
 }
 
 function startGame(){
-  if(running) return; // prevent multiple loops
+  if(running) return; // lock
+  if(!bird) return; // ensure bird loaded
   running=true;
   pipes=[]; score=0; scoreEl.textContent=score; lastPipeTime=Date.now(); lastFrameTime=0;
   bird.x=80; bird.y=H/2; bird.vy=0;
@@ -178,18 +179,18 @@ function endGame(){
 function doFlap(){
   unlockSounds();
   if(!running) startGame();
-  bird.flap();
+  if(bird) bird.flap();
 }
 
 function playSound(audio){
   if(!soundsUnlocked) return;
-  audio.currentTime=0; audio.play();
+  try { audio.currentTime=0; audio.play(); } catch(e){}
 }
 
 function unlockSounds(){
   if(soundsUnlocked) return;
-  flapSound.play().then(()=>flapSound.pause());
-  hitSound.play().then(()=>hitSound.pause());
+  try { flapSound.play().then(()=>flapSound.pause()); } catch(e){}
+  try { hitSound.play().then(()=>hitSound.pause()); } catch(e){}
   soundsUnlocked=true;
 }
 
@@ -199,9 +200,14 @@ canvas.addEventListener('mousedown',doFlap);
 window.addEventListener('touchstart',e=>{e.preventDefault();doFlap();},{passive:false});
 startBtn.addEventListener('click',startGame);
 
-const birdImg=new Image();
-birdImg.src=birdImageSrc;
-birdImg.onload=()=>{ bird=createBird(birdImg); msgText.innerHTML='Tap anywhere / Space / Click to play'; msgBox.style.display='block'; };
+// Load bird image safely
+const birdImg = new Image();
+birdImg.src = birdImageSrc;
+birdImg.onload = () => {
+  bird = createBird(birdImg);
+  msgText.innerHTML='Tap anywhere / Space / Click to play';
+  msgBox.style.display='block';
+};
 })();
 </script>
 </body>
