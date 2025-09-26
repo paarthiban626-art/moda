@@ -171,7 +171,7 @@
     running=false;
     playSound(hitSound);
     bestScore = Math.max(bestScore, score);
-    msgText.innerHTML = Game Over<br>Score: ${score}<br>Best: ${bestScore};
+    msgText.innerHTML = `Game Over<br>Score: ${score}<br>Best: ${bestScore}`;
     msgBox.style.display='block';
   }
 
@@ -182,16 +182,15 @@
   }
 
   function playSound(audio) {
-    if (!soundsUnlocked) return; // block until unlocked
+    if (!soundsUnlocked) return;
     audio.currentTime = 0;
     audio.play();
   }
 
-  // ✅ Unlock sounds on first user interaction
   function unlockSounds() {
     if (soundsUnlocked) return;
-    flapSound.play().then(()=>flapSound.pause());
-    hitSound.play().then(()=>hitSound.pause());
+    flapSound.play().then(()=>flapSound.pause()).catch(()=>{});
+    hitSound.play().then(()=>hitSound.pause()).catch(()=>{});
     soundsUnlocked = true;
   }
 
@@ -199,7 +198,7 @@
   window.addEventListener('keydown', e => { if (e.code==='Space'){ e.preventDefault(); unlockSounds(); doFlap(); }});
   canvas.addEventListener('mousedown', e => { unlockSounds(); doFlap(); });
 
-  // ✅ Mobile → tap ANYWHERE
+  // Mobile → tap ANYWHERE
   window.addEventListener('touchstart', e => { e.preventDefault(); unlockSounds(); doFlap(); }, {passive:false});
 
   startBtn.addEventListener('click', startGame);
