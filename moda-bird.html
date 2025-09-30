@@ -9,7 +9,8 @@
 html, body {
   height: 100%; margin:0;
   display:flex; align-items:center; justify-content:center;
-  background:#70c5ce; touch-action:none;
+  background:#70c5ce; 
+  /* ❌ removed touch-action:none (this blocked inputs on mobile) */
 }
 #gameWrapper { position:relative; }
 canvas {
@@ -20,14 +21,12 @@ canvas {
   position:absolute; left:0; top:0; right:0;
   display:flex; align-items:flex-start; justify-content:flex-start;
   padding:8px; color:#fff; font-weight:700;
-  text-shadow:0 1px 0 rgba(0,0,0,0.3); font-size:20px;
-  /* removed pointer-events:none so input can be clicked */
+  text-shadow:0 1px 0 rgba(0,0,0,0.3); pointer-events:none; font-size:20px;
 }
 #message {
   position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
   background:rgba(255,255,255,0.95); padding:12px 16px; border-radius:8px;
   text-align:center;
-  pointer-events:auto;  /* ensure inputs work */
 }
 button { margin-top:8px; padding:8px 12px; border:none; border-radius:6px;
   background:#2b6b6b; color:#fff; font-weight:700; cursor:pointer;
@@ -177,6 +176,7 @@ input { padding:6px; border-radius:4px; border:1px solid #ccc; margin-top:6px;}
     showLeaderboard();
     msgText.innerHTML=`Game Over<br>Score: ${score}<br>Best: ${bestScore}`;
     msgBox.style.display='block';
+    playerInput.focus(); // 🔥 ensures input ready when game over
   }
 
   function doFlap(){ if(!bird) return; if(!running) startGame(); bird.flap(); }
@@ -187,13 +187,21 @@ input { padding:6px; border-radius:4px; border:1px solid #ccc; margin-top:6px;}
 
   window.addEventListener('keydown', e=>{ if(e.code==='Space'){ e.preventDefault(); unlockSounds(); doFlap(); }});
   canvas.addEventListener('mousedown', e=>{ unlockSounds(); doFlap(); });
-  window.addEventListener('touchstart', e=>{ e.preventDefault(); unlockSounds(); doFlap(); }, {passive:false});
+
+  // ✅ FIX: don't block taps on inputs/buttons
+  window.addEventListener('touchstart', e=>{
+    if (e.target.tagName !== "INPUT" && e.target.tagName !== "BUTTON") {
+      e.preventDefault();
+      unlockSounds();
+      doFlap();
+    }
+  }, {passive:false});
+
   startBtn.addEventListener('click', startGame);
 
   const birdImg = new Image();
   birdImg.src = birdImageSrc;
-  birdImg.onload = ()=>{ bird=createBird(birdImg); msgBox.style.display='block'; }
-
+  birdImg.onload = ()=>{ bird=createBird(birdImg); msgBox.style.display='block'; playerInput.focus(); }
 })();
 </script>
 </body>
