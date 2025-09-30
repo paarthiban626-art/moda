@@ -2,150 +2,178 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Flappy Bird with Name</title>
+  <title>Flappy Leaderboard</title>
   <style>
-    html, body {
-      height: 100%; margin: 0;
-      display: flex; align-items: center; justify-content: center;
-      background: #70c5ce;
-    }
-    #gameWrapper {
-      position: relative; width: 100%; max-width: 420px;
-    }
-    canvas {
-      display: block; border: 6px solid #2b6b6b;
-      border-radius: 8px; width: 100%; height: auto;
-      touch-action: none; /* prevent scrolling while playing */
-    }
-    #message {
-      position: absolute; top: 50%; left: 50%;
-      transform: translate(-50%, -50%);
-      background: rgba(0,0,0,0.7); color: white;
-      padding: 14px; border-radius: 10px;
-      text-align: center; width: 80%;
-    }
-    #playerName {
-      margin-top: 8px; padding: 6px; font-size: 14px;
-      width: 90%; max-width: 250px; border-radius: 6px; border: none;
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #2f4f4f;
+      color: #fff;
       text-align: center;
     }
-    #startBtn {
-      margin-top: 10px; padding: 6px 12px; font-size: 14px;
-      border-radius: 6px; border: none; background: #2b6b6b; color: white;
+    #gameContainer {
+      width: 100%;
+      height: 70vh;
+      background: #244;
+      margin: 0 auto;
+      position: relative;
+      overflow: hidden;
+    }
+    #msgBox {
+      position: absolute;
+      top: 20%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0, 0, 0, 0.85);
+      padding: 20px;
+      border-radius: 10px;
+      display: none;
+      z-index: 9999;
+    }
+    #msgBox input {
+      display: block;
+      margin: 10px auto;
+      padding: 8px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+      font-size: 18px;
+      width: 80%;
+      -webkit-user-select: text;
+      -webkit-touch-callout: default;
+    }
+    #msgBox button {
+      margin-top: 10px;
+      padding: 8px 15px;
+      border: none;
+      background: #28a745;
+      color: white;
+      border-radius: 5px;
+      font-size: 16px;
       cursor: pointer;
     }
-    #warning {
-      margin-top: 6px;
-      font-size: 12px;
-      color: #ffcc00;
+    #leaderboard {
+      margin-top: 20px;
+      text-align: center;
     }
-    #scoreBoard {
-      position: absolute; top: 8px; left: 8px;
-      font-family: Arial, sans-serif; font-size: 20px;
-      font-weight: bold; color: #fff;
-      text-shadow: 2px 2px 2px black;
+    #leaderboard h3 {
+      margin: 10px 0;
+    }
+    #leaderboard ol {
+      list-style: none;
+      padding: 0;
+    }
+    #leaderboard li {
+      background: rgba(255,255,255,0.1);
+      margin: 5px;
+      padding: 8px;
+      border-radius: 5px;
     }
   </style>
 </head>
 <body>
-  <div id="gameWrapper">
-    <canvas id="gameCanvas" width="320" height="480"></canvas>
-    <div id="scoreBoard">Score:0</div>
-    <div id="message">
-      <div>Enter your name:</div>
-      <input id="playerName" type="text" placeholder="Your name">
-      <button id="startBtn">Start / Restart</button>
-      <div id="warning"></div>
+  <h2>Score: <span id="score">0</span></h2>
+  <div id="gameContainer">
+    <div id="msgBox">
+      <p>Enter your name</p>
+      <input type="text" id="playerInput" placeholder="Your name" />
+      <button id="startBtn">Start Game</button>
     </div>
   </div>
 
+  <div id="leaderboard">
+    <h3>🏆 Top 5 Players</h3>
+    <ol id="leaderboardList"></ol>
+  </div>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js"></script>
+
   <script>
-    const canvas = document.getElementById("gameCanvas");
-    const ctx = canvas.getContext("2d");
-    const W = canvas.width, H = canvas.height;
-    let running = false, frame = 0, score = 0, pipes = [];
-    let playerName = "";
-    const scoreEl = document.getElementById("scoreBoard");
-    const msgBox = document.getElementById("message");
-    const playerInput = document.getElementById("playerName");
+    // Your Firebase config
+    const firebaseConfig = {
+      apiKey: "AIzaSyAJUkAj4ShSZ-aKFp2dvCEYh9nmxAL1lrA",
+      authDomain: "flappy-leaderboard-a4d67.firebaseapp.com",
+      databaseURL: "https://flappy-leaderboard-a4d67-default-rtdb.firebaseio.com",
+      projectId: "flappy-leaderboard-a4d67",
+      storageBucket: "flappy-leaderboard-a4d67.firebasestorage.app",
+      messagingSenderId: "868069717929",
+      appId: "1:868069717929:web:2a2b0e2894c86e6355f6b8"
+    };
+
+    // Initialize Firebase
+    const app = firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    const msgBox = document.getElementById("msgBox");
+    const playerInput = document.getElementById("playerInput");
     const startBtn = document.getElementById("startBtn");
-    const warningDiv = document.getElementById("warning");
+    const scoreSpan = document.getElementById("score");
+    const leaderboardList = document.getElementById("leaderboardList");
 
-    // bird setup
-    let bird = {x:80, y:H/2, w:24, h:24, vy:0};
+    let playerName = "";
+    let score = 0;
 
-    // detect mobile
-    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-
-    // spawn pipe
-    function spawnPipe(x) {
-      let gap = 100;
-      let top = Math.random() * (H - gap - 80) + 40;
-      return {x:x, top:top, w:50, gap:gap};
-    }
-
-    function reset() {
-      running = false;
+    // Show input box on load
+    window.onload = () => {
       msgBox.style.display = "block";
-      warningDiv.textContent = "";
-      bird.y = H/2; bird.vy = 0;
-      pipes = [];
-    }
+      setTimeout(() => {
+        playerInput.focus();
+        playerInput.scrollIntoView({behavior: 'smooth', block: 'center'});
+      }, 300);
+    };
 
-    function startGame() {
-      if(playerInput.value.trim() === ""){
-        warningDiv.textContent = "⚠️ Please enter your name first.";
-        playerInput.scrollIntoView({behavior:"smooth", block:"center"});
+    playerInput.addEventListener("touchstart", () => {
+      playerInput.focus();
+    });
 
-        // desktop only: focus
-        if(!isMobile) playerInput.focus();
+    startBtn.addEventListener("click", () => {
+      const name = playerInput.value.trim();
+      if (!name) {
+        alert("Enter your name first");
         return;
       }
-      playerName = playerInput.value.trim();
-      pipes=[]; frame=0; score=0; scoreEl.textContent="Score:0";
-      bird.x=80; bird.y=H/2; bird.vy=0;
-      running=true; msgBox.style.display="none";
-      for(let i=0;i<3;i++) pipes.push(spawnPipe(W+i*160));
-      requestAnimationFrame(loop);
+      playerName = name;
+      msgBox.style.display = "none";
+
+      // Start dummy game (increase score every 2 sec)
+      setInterval(() => {
+        score++;
+        scoreSpan.textContent = score;
+        // Auto-save score
+        saveScore(playerName, score);
+      }, 2000);
+    });
+
+    // Save score to Firebase
+    function saveScore(name, score) {
+      db.ref("scores/" + name).set({
+        username: name,
+        score: score
+      });
     }
 
-    function loop() {
-      if(!running) return;
-      ctx.fillStyle="#70c5ce";
-      ctx.fillRect(0,0,W,H);
-
-      bird.vy+=0.5; bird.y+=bird.vy;
-      ctx.fillStyle="yellow";
-      ctx.fillRect(bird.x, bird.y, bird.w, bird.h);
-
-      if(bird.y+bird.h>H || bird.y<0){ reset(); return; }
-
-      frame++;
-      if(frame%90===0) pipes.push(spawnPipe(W));
-      for(let i=0;i<pipes.length;i++){
-        let p = pipes[i];
-        p.x-=2;
-        ctx.fillStyle="green";
-        ctx.fillRect(p.x,0,p.w,p.top);
-        ctx.fillRect(p.x,p.top+p.gap,p.w,H-(p.top+p.gap));
-        if(bird.x+bird.w>p.x && bird.x<p.x+p.w &&
-           (bird.y<p.top || bird.y+bird.h>p.top+p.gap)){
-          reset(); return;
-        }
-        if(p.x+p.w===bird.x){ score++; scoreEl.textContent="Score:"+score; }
-      }
-      pipes=pipes.filter(p=>p.x>-50);
-
-      requestAnimationFrame(loop);
+    // Load top 5 scores
+    function loadLeaderboard() {
+      db.ref("scores")
+        .orderByChild("score")
+        .limitToLast(5)
+        .on("value", snapshot => {
+          const scores = [];
+          snapshot.forEach(child => {
+            scores.push(child.val());
+          });
+          scores.sort((a,b) => b.score - a.score); // highest first
+          leaderboardList.innerHTML = "";
+          scores.forEach(s => {
+            const li = document.createElement("li");
+            li.textContent = `${s.username} - ${s.score}`;
+            leaderboardList.appendChild(li);
+          });
+        });
     }
 
-    canvas.addEventListener("click", ()=>{ if(running) bird.vy=-8; });
-    document.addEventListener("keydown", e=>{ if(e.code==="Space" && running) bird.vy=-8; });
-    startBtn.addEventListener("click", startGame);
-
-    reset();
+    loadLeaderboard();
   </script>
 </body>
 </html>
-    
