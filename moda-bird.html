@@ -1,4 +1,4 @@
-        <!doctype html>
+<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8" />
@@ -9,12 +9,14 @@
 html, body {
   height: 100%; margin:0;
   display:flex; align-items:center; justify-content:center;
-  background:#70c5ce; touch-action:none;
+  background:#70c5ce; 
+  /* ❌ removed touch-action:none */
 }
 #gameWrapper { position:relative; width:100%; max-width:400px; }
 canvas {
   display:block; border:6px solid #2b6b6b; border-radius:8px;
   width:100%; height:auto;
+  touch-action:none; /* ✅ restrict only on canvas */
 }
 #overlay {
   position:absolute; left:0; top:0; right:0;
@@ -178,8 +180,9 @@ input {
     showLeaderboard();
     msgText.innerHTML=`Game Over<br>Score: ${score}<br>Best: ${bestScore}`;
     msgBox.style.display='block';
-    playerInput.focus(); // 🔑 focus input again
-    playerInput.scrollIntoView({behavior:'smooth', block:'center'});
+    // ❌ removed auto focus to avoid mobile keyboard issue
+    // playerInput.focus(); 
+    // playerInput.scrollIntoView({behavior:'smooth', block:'center'});
   }
 
   function doFlap(){ if(!bird) return; if(!running) startGame(); bird.flap(); }
@@ -195,8 +198,7 @@ input {
 
   const birdImg = new Image();
   birdImg.src = birdImageSrc;
-  birdImg.onload = ()=>{ bird=createBird(birdImg); msgBox.style.display='block'; playerInput.focus(); };
-
+  birdImg.onload = ()=>{ bird=createBird(birdImg); msgBox.style.display='block'; /* no auto focus */ };
 })();
 </script>
 </body>
