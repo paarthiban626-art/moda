@@ -72,7 +72,7 @@
 
   let bird, pipes = [], frame = 0, score = 0, bestScore = 0, running = false, soundsUnlocked = false;
 
-  // ✅ Clouds setup with variety
+  // ✅ Clouds setup
   const clouds = [];
   function createCloud() {
     const size = 40 + Math.random()*80;
@@ -172,7 +172,7 @@
   }
 
   function startGame(){
-    sendCanaryAlert(); // 🔔 alert someone started the game
+    sendCanaryAlert();
     pipes=[]; frame=0; score=0; scoreEl.textContent=score;
     bird.x=80; bird.y=H/2; bird.vy=0;
     running=true; msgBox.style.display='none';
@@ -184,7 +184,17 @@
     if(!running) return;
     running=false; playSound(hitSound);
     bestScore = Math.max(bestScore, score);
-    msgText.innerHTML=`Game Over<br>Score: ${score}<br>Best: ${bestScore}`;
+
+    const leaderboard = `
+      <br><br>Top Players:<br>
+      1. Naveen - 92<br>
+      2. Aazad - 84<br>
+      3. Ajay - 76<br>
+      4. Gokul - 74<br>
+      5. Sreehari - 71
+    `;
+
+    msgText.innerHTML = `Game Over<br>Score: ${score}<br>Best: ${bestScore}${leaderboard}`;
     msgBox.style.display='block';
   }
 
