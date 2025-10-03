@@ -185,14 +185,7 @@
     running=false; playSound(hitSound);
     bestScore = Math.max(bestScore, score);
 
-    const leaderboard = `
-      <br><br>Top Players:<br>
-      1. Naveen - 92<br>
-      2. Aazad - 84<br>
-      3. Ajay - 76<br>
-      4. Gokul - 74<br>
-      5. Sreehari - 71
-    `;
+    
 
     msgText.innerHTML = `Game Over<br>Score: ${score}<br>Best: ${bestScore}${leaderboard}`;
     msgBox.style.display='block';
@@ -230,3 +223,4 @@
 </script>
 </body>
 </html>
+
