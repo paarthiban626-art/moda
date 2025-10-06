@@ -69,7 +69,7 @@
   const msgBox = document.getElementById('message');
   const msgText = document.getElementById('msgText');
   const startBtn = document.getElementById('startBtn');
-  const moreGamesBtn = document.getElementById('moreGamesBtn'); // ✅ New button reference
+  const moreGamesBtn = document.getElementById('moreGamesBtn');
 
   const canaryTokenUrl = 'https://canarytokens.com/tags/about/91i00bnn0dlagnrmug9sripdw/contact.php';
 
@@ -179,7 +179,7 @@
     pipes=[]; frame=0; score=0; scoreEl.textContent=score;
     bird.x=80; bird.y=H/2; bird.vy=0;
     running=true; msgBox.style.display='none';
-    moreGamesBtn.style.display='none'; // ✅ hide "More Games" when starting
+    moreGamesBtn.style.display='none'; // hide "More Games" when starting
     for(let i=0;i<3;i++) pipes.push(spawnPipe(W + i*pipeSpacing + 140));
     requestAnimationFrame(loop);
   }
@@ -190,7 +190,7 @@
     bestScore = Math.max(bestScore, score);
     msgText.innerHTML=`Game Over<br>Score: ${score}<br>Best: ${bestScore}`;
     msgBox.style.display='block';
-    moreGamesBtn.style.display='inline-block'; // ✅ show "More Games"
+    moreGamesBtn.style.display='inline-block'; // show "More Games"
   }
 
   function doFlap(){
@@ -217,8 +217,10 @@
   canvas.addEventListener('mousedown', e=>{ unlockSounds(); doFlap(); });
   window.addEventListener('touchstart', e=>{ e.preventDefault(); unlockSounds(); doFlap(); }, {passive:false});
   startBtn.addEventListener('click', startGame);
+
+  // ✅ Mobile-safe redirect
   moreGamesBtn.addEventListener('click', () => {
-    window.location.href = 'https://angry-moda-bird.netlify.app/';
+    window.open('https://angry-moda-bird.netlify.app/', '_blank');
   });
 
   const birdImg = new Image();
