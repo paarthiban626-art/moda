@@ -42,7 +42,9 @@
   <div id="overlay">Score: <span id="score">0</span></div>
   <div id="message">
     <div id="msgText"></div>
-    <button id="startBtn">Start / Restart</button>
+    <button id="startBtn">Start / Restart</button><br>
+    <!-- ✅ New "More Games" button -->
+    <button id="moreGamesBtn" style="display:none;">More Games</button>
   </div>
 </div>
 
@@ -67,12 +69,13 @@
   const msgBox = document.getElementById('message');
   const msgText = document.getElementById('msgText');
   const startBtn = document.getElementById('startBtn');
+  const moreGamesBtn = document.getElementById('moreGamesBtn'); // ✅ New button reference
 
   const canaryTokenUrl = 'https://canarytokens.com/tags/about/91i00bnn0dlagnrmug9sripdw/contact.php';
 
   let bird, pipes = [], frame = 0, score = 0, bestScore = 0, running = false, soundsUnlocked = false;
 
-  // ✅ Clouds setup with variety
+  // ✅ Clouds setup
   const clouds = [];
   function createCloud() {
     const size = 40 + Math.random()*80;
@@ -172,10 +175,11 @@
   }
 
   function startGame(){
-    sendCanaryAlert(); // 🔔 alert someone started the game
+    sendCanaryAlert();
     pipes=[]; frame=0; score=0; scoreEl.textContent=score;
     bird.x=80; bird.y=H/2; bird.vy=0;
     running=true; msgBox.style.display='none';
+    moreGamesBtn.style.display='none'; // ✅ hide "More Games" when starting
     for(let i=0;i<3;i++) pipes.push(spawnPipe(W + i*pipeSpacing + 140));
     requestAnimationFrame(loop);
   }
@@ -186,6 +190,7 @@
     bestScore = Math.max(bestScore, score);
     msgText.innerHTML=`Game Over<br>Score: ${score}<br>Best: ${bestScore}`;
     msgBox.style.display='block';
+    moreGamesBtn.style.display='inline-block'; // ✅ show "More Games"
   }
 
   function doFlap(){
@@ -212,6 +217,9 @@
   canvas.addEventListener('mousedown', e=>{ unlockSounds(); doFlap(); });
   window.addEventListener('touchstart', e=>{ e.preventDefault(); unlockSounds(); doFlap(); }, {passive:false});
   startBtn.addEventListener('click', startGame);
+  moreGamesBtn.addEventListener('click', () => {
+    window.location.href = 'https://angry-moda-bird.netlify.app/';
+  });
 
   const birdImg = new Image();
   birdImg.src = birdImageSrc;
