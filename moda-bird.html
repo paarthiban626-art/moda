@@ -219,11 +219,11 @@
   startBtn.addEventListener('click', startGame);
 
   // ✅ Mobile-safe redirect
-  moreGamesBtn.addEventListener('click', () => {
-    const meta = document.createElement('meta');
-    meta.httpEquiv = 'refresh';
-    meta.content = '0;url=https://angry-moda-bird.netlify.app/';
-    document.head.appendChild(meta);
+  moreGamesBtn.addEventListener('click', (e) => {
+    e.preventDefault(); // Prevent the default behavior of the button click
+    setTimeout(() => {
+      window.location.href = 'https://angry-moda-bird.netlify.app/';
+    }, 100); // Delay the redirection by 100 milliseconds
   });
 
   const birdImg = new Image();
