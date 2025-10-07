@@ -219,7 +219,8 @@
   startBtn.addEventListener('click', startGame);
 
   // ✅ Mobile-safe redirect
-  moreGamesBtn.addEventListener('click', () => {
+  moreGamesBtn.addEventListener('click', (e) => {
+    e.preventDefault(); // Prevent the default behavior of the button click
     window.open('https://angry-moda-bird.netlify.app/', '_blank');
   });
 
