@@ -214,8 +214,8 @@
 
   // Controls
   window.addEventListener('keydown', e=>{ if(e.code==='Space'){ e.preventDefault(); unlockSounds(); doFlap(); } });
-  canvas.addEventListener('mousedown', e=>{ unlockSounds(); doFlap(); });
-  window.addEventListener('touchstart', e=>{ e.preventDefault(); unlockSounds(); doFlap(); }, {passive:false});
+  canvas.addEventListener('mousedown', e=>{ unlockSounds(); });
+  window.addEventListener('touchstart', e=>{ e.preventDefault(); unlockSounds(); }, {passive:false});
   startBtn.addEventListener('click', startGame);
 
   // ✅ Mobile-safe redirect
