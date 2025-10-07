@@ -214,16 +214,13 @@
 
   // Controls
   window.addEventListener('keydown', e=>{ if(e.code==='Space'){ e.preventDefault(); unlockSounds(); doFlap(); } });
-  canvas.addEventListener('mousedown', e=>{ unlockSounds(); });
-  window.addEventListener('touchstart', e=>{ e.preventDefault(); unlockSounds(); }, {passive:false});
+  canvas.addEventListener('mousedown', e=>{ unlockSounds(); doFlap(); });
+  window.addEventListener('touchstart', e=>{ e.preventDefault(); unlockSounds(); doFlap(); }, {passive:false});
   startBtn.addEventListener('click', startGame);
 
   // ✅ Mobile-safe redirect
-  moreGamesBtn.addEventListener('click', (e) => {
-    e.preventDefault(); // Prevent the default behavior of the button click
-    setTimeout(() => {
-      window.location.href = 'https://angry-moda-bird.netlify.app/';
-    }, 100); // Delay the redirection by 100 milliseconds
+  moreGamesBtn.addEventListener('click', () => {
+    window.open('https://angry-moda-bird.netlify.app/', '_blank');
   });
 
   const birdImg = new Image();
